@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>GPA Calculator(LEGENDARY) </title>
+  <style>
+    :root {
+      --bg: #0b1220;
+      --panel: #121a2b;
+      --muted: #6b7280;
+      --text: #e5e7eb;
+      --accent: #60a5fa;
+      --accent-2: #34d399;
+      --warn: #f59e0b;
+      --danger: #ef4444;
+      --ring: #2563eb55;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Helvetica Neue, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+      background: radial-gradient(1200px 800px at 10% -10%, #19243c, transparent), var(--bg);}
+  /* background-image: url(mylogo.jpg.PNG);
+      background-position:bottom;
+      background-size: cover;
+      height: 100vh;
+      color: var(--text);
+    }*/
+    .container { max-width: 1100px; margin: 40px auto; padding: 0 16px; }
+    .header { display: flex; gap: 12px; align-items: center; justify-content: space-between; flex-wrap: wrap; }
+    h1 { font-size: clamp(22px, 3vw, 32px); margin: 0; letter-spacing: .2px; }
+    .card {
+      background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01));
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 16px; padding: 16px; box-shadow: 0 10px 30px rgba(0,0,0,.25);
+    }
+    .controls { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+    .btn { appearance: none; border: 1px solid rgba(255,255,255,.12); background: #111827; color: #e5e7eb; padding: 10px 14px; border-radius: 12px; cursor: pointer; font-weight: 600; transition: .15s ease; }
+    .btn:hover { transform: translateY(-1px); border-color: var(--accent); box-shadow: 0 0 0 4px var(--ring); }
+    .btn.secondary { background: #0f172a; }
+    .btn.accent { background: linear-gradient(135deg, #2563eb, #22c55e); border: none; }
+    .btn.small { padding: 6px 10px; border-radius: 10px; font-weight: 600; }
+
+    .grid { display: grid; gap: 14px; }
+    @media (min-width: 860px) {
+      .grid-2 { grid-template-columns: 1fr 1fr; }
+    }
+
+    .student { border: 1px dashed rgba(255,255,255,.12); border-radius: 14px; padding: 14px; }
+    .row { display: grid; grid-template-columns: 1.2fr .5fr .5fr auto; gap: 10px; align-items: center; }
+    .row.header { font-weight: 700; color: #cbd5e1; }
+    input[type="text"], input[type="number"] {
+      width: 100%; padding: 10px 12px; border-radius: 10px; border: 1px solid rgba(255,255,255,.12); background: #0b1220; color: #e5e7eb; outline: none; transition: .15s ease;
+    }
+    input:focus { border-color: var(--accent); box-shadow: 0 0 0 4px var(--ring); }
+
+    .tag { display: inline-flex; align-items: center; gap: 8px; padding: 6px 10px; border-radius: 999px; background: #0f172a; border: 1px solid rgba(255,255,255,.1); font-size: 12px; color: #cbd5e1; }
+    .muted { color: var(--muted); }
+    .warn { color: var(--warn); }
+    .danger { color: var(--danger); }
+    .summary { display: flex; gap: 16px; flex-wrap: wrap; }
+    .pill { padding: 10px 12px; border-radius: 12px; background: #0f172a; border: 1px solid rgba(255,255,255,.1); min-width: 160px; }
+    .right { text-align: right; }
+    .divider { height: 1px; background: rgba(255,255,255,.08); margin: 12px 0; }
+    details { background: #0b1220; border-radius: 12px; border: 1px solid rgba(255,255,255,.08); padding: 10px 12px; }
+    summary { cursor: pointer; font-weight: 700; }
+    .footer { margin-top: 20px;
+       font-size: 12px; 
+       color: #93a3b8;
+        text-align: center;}
+    footer {
+    background-color: #333;
+    color: #fff;
+    text-align: center;
+    padding: 10px 0;
+} 
+    .link { color: #93c5fd; text-decoration: none; }
+    .link:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>GPA Calculator — French scale <span class="muted">(/20 → /4)</span></h1>
+      <div class="controls">
+        <label class="tag">Total Units Target: <input id="totalUnits" type="number" value="30" min="1" style="width:80px;margin-left:8px"></label>
+    <button id="addStudent" class="btn accent">+ Add Student</button>
+        <button id="calcAll" class="btn">Calculate All</button>
+        <button id="reset" class="btn secondary">Reset</button>
+      </div>
+    </div>
+
+    <p class="muted" style="margin: 8px 0 18px;">Enter courses for each student. Use grades on a 0–20 scale and units (coefficients). The app computes weighted average (/20) and converts to /4.0. Default total units = 30 (editable).</p>
+
+    <div id="students" class="grid"></div>
+
+    <div class="footer">Made for fast GPA input. Supports multiple students, live validation, CSV export coming soon and to prepare for MR LOUCENY just in case. </div>
+  </div>
+  <footer>
+    DIALLO ACADEMY
+  </footer>
+
+  <template id="studentTpl">
+    <div class="student card">
+      <div style="display:flex; align-items:center; gap:10px; justify-content:space-between; flex-wrap:wrap;">
+        <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+          <input class="student-name" type="text" placeholder="Student name" />
+          <span class="tag units-tag">Units: <strong class="units-now" style="margin-left:6px;">0</strong> / <span class="units-target">30</span></span>
+          <span class="tag" title="Weighted average on /20">GPA /20: <strong class="gpa20" style="margin-left:6px;">—</strong></span>
+          <span class="tag" title="Converted to /4.0 scale">GPA /4.0: <strong class="gpa4" style="margin-left:6px;">—</strong></span>
+        </div>
+        <div style="display:flex; gap:8px;">
+          <button class="btn small addRow">+ Course</button>
+          <button class="btn small calc">Calculate</button>
+          <button class="btn small" data-clone>Duplicate</button>
+          <button class="btn small" data-delete>Remove</button>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="row header">
+        <div>Course</div>
+        <div>Grade (/20)</div>
+        <div>Units</div>
+        <div class="right">Actions</div>
+      </div>
+      <div class="rows"></div>
+
+      <details style="margin-top:10px;">
+        <summary>Tips</summary>
+        <ul class="muted">
+          <li>Use decimal grades like 16.67 if needed.</li>
+          <li>Units are your coefficients (e.g., 3 or 6). Target defaults to 30 above.</li>
+          <li>Click <b>+ Course</b> to add more lines, or paste your data quickly.</li>
+        </ul>
+      </details>
+    </div>
+  </template>
+
+  <template id="rowTpl">
+    <div class="row">
+      <input type="text" placeholder="e.g., Advanced Web Programming" />
+      <input type="number" step="0.01" min="0" max="20" placeholder="e.g., 18.5" />
+      <input type="number" step="1" min="0" placeholder="e.g., 3" />
+      <div class="right">
+        <button class="btn small" data-paste>Paste</button>
+        <button class="btn small" data-dup>Clone</button>
+        <button class="btn small" data-rem>Delete</button>
+      </div>
+    </div>
+  </template>
+
+  <script>
+    const el = (sel, root=document) => root.querySelector(sel);
+    const els = (sel, root=document) => Array.from(root.querySelectorAll(sel));
+
+    const studentsWrap = el('#students');
+    const tplStudent = el('#studentTpl');
+    const tplRow = el('#rowTpl');
+    const totalUnitsInput = el('#totalUnits');
+
+    function toFour(g20){ return Math.round(((g20 / 20) * 4) * 100) / 100; }
+
+    function addStudent(prefill){
+      const node = tplStudent.content.firstElementChild.cloneNode(true);
+      const rowsWrap = el('.rows', node);
+      const unitsTargetSpan = el('.units-target', node);
+      const unitsNow = el('.units-now', node);
+
+      unitsTargetSpan.textContent = totalUnitsInput.value || '30';
+
+      function addRow(data){
+        const row = tplRow.content.firstElementChild.cloneNode(true);
+        const [course, grade, units] = els('input', row);
+        if(data){
+          course.value = data.course ?? '';
+          grade.value = data.grade ?? '';
+          units.value = data.units ?? '';
+        }
+        el('[data-rem]', row).onclick = () => { row.remove(); recalc(); };
+        el('[data-dup]', row).onclick = () => { addRow({course:course.value, grade:grade.value, units:units.value}); };
+        el('[data-paste]', row).onclick = async () => {
+          try {
+            const text = await navigator.clipboard.readText();
+            // Accept formats like: Name - 18.33 - 3  OR  Name,18.33,3
+            const m = text.trim().match(/^(.+?)[,\-]\s*(\d+(?:\.\d+)?)\s*[,\-]\s*(\d+(?:\.\d+)?)/);
+            if(m){
+              course.value = m[1].trim();
+              grade.value = m[2];
+              units.value = m[3];
+            }
+          } catch{}
+        };
+        ['input','change'].forEach(evt=> row.addEventListener(evt, recalc));
+        rowsWrap.appendChild(row);
+        return row;
+      }
+
+      function currentUnits(){
+        return els('.row input:nth-child(3)', node).reduce((s,inp)=> s + (parseFloat(inp.value)||0), 0);
+      }
+
+      function recalc(){
+        const target = parseFloat(totalUnitsInput.value)||30;
+        const pairs = els('.row', rowsWrap).map(r=>{
+          const [c,g,u] = els('input', r);
+          return { course:c.value.trim(), grade: parseFloat(g.value), units: parseFloat(u.value) };
+        }).filter(x=> !isNaN(x.grade) && !isNaN(x.units));
+
+        const totalPts = pairs.reduce((s,x)=> s + (x.grade * x.units), 0);
+        const gpa20 = pairs.length ? (totalPts / target) : NaN;
+        const gpaSpan = el('.gpa20', node);
+        const gpa4Span = el('.gpa4', node);
+        unitsNow.textContent = currentUnits();
+
+        if(!isFinite(gpa20)){
+          gpaSpan.textContent = '—';
+          gpa4Span.textContent = '—';
+        } else {
+          const rounded20 = Math.round(gpa20 * 100)/100;
+          gpaSpan.textContent = rounded20.toFixed(2);
+          gpa4Span.textContent = toFour(rounded20).toFixed(2);
+        }
+
+        // unit status color
+        const tag = el('.units-tag', node);
+        const now = currentUnits();
+        tag.style.borderColor = 'rgba(255,255,255,.1)';
+        tag.style.color = '';
+        if(now < target){ tag.style.color = 'var(--warn)'; }
+        if(now > target){ tag.style.color = 'var(--danger)'; }
+      }
+
+      el('.addRow', node).onclick = () => { addRow(); };
+      el('.calc', node).onclick = recalc;
+      el('[data-delete]', node).onclick = () => node.remove();
+      el('[data-clone]', node).onclick = () => {
+        const clone = addStudent();
+        clone.querySelector('.student-name').value = node.querySelector('.student-name').value + ' (copy)';
+        // copy rows
+        els('.row', rowsWrap).forEach(r=>{
+          const [c,g,u] = els('input', r);
+          const rr = clone.querySelector('.rows');
+          const row = tplRow.content.firstElementChild.cloneNode(true);
+          const ins = els('input', row);
+          ins[0].value = c.value; ins[1].value = g.value; ins[2].value = u.value;
+          el('[data-rem]', row).onclick = () => { row.remove(); cloneRecalc(); };
+          el('[data-dup]', row).onclick = () => { const d = tplRow.content.firstElementChild.cloneNode(true); rr.appendChild(d); };
+          rr.appendChild(row);
+        });
+        function cloneRecalc(){ els('input', clone).forEach(i=> i.addEventListener('input', ()=>{})); }
+      };
+
+      // start with two rows for convenience
+      addRow(); addRow();
+      recalc();
+      studentsWrap.appendChild(node);
+      return node;
+    }
+
+    function calcAll(){
+      els('.student').forEach(st => {
+        const btn = el('.calc', st); btn?.click();
+      });
+    }
+
+    el('#addStudent').onclick = () => addStudent();
+    el('#calcAll').onclick = calcAll;
+    el('#reset').onclick = () => { studentsWrap.innerHTML = ''; addStudent(); };
+    totalUnitsInput.addEventListener('input', ()=>{
+      // update all targets and recompute
+      els('.student').forEach(st => {
+        el('.units-target', st).textContent = totalUnitsInput.value || '30';
+      });
+      calcAll();
+    });
+    // Seed with your provided example for quick testing
+    const s = addStudent();
+    s.querySelector('.student-name').value = 'You';
+    const rowsWrap = s.querySelector('.rows');
+    const seed = [
+      ['Programming Headache' , 15, 6 ],
+      ['Database wahala', 20,3],
+      ['Data mining', 17.87, 3],
+      ['Academic problem', 10,3],
+      ['Artificial intelligence', 18.33, 3],
+      ['Cisco', 15, 3],
+      [' Networking trounble', 20,3],
+    ];
+    rowsWrap.innerHTML = '';
+    seed.forEach(([c,g,u])=>{
+      const r = tplRow.content.firstElementChild.cloneNode(true);
+      const ins = els('input', r);
+      ins[0].value = c; ins[1].value = g; ins[2].value = u;
+      el('[data-rem]', r).onclick = () => { r.remove(); };
+      el('[data-dup]', r).onclick = () => { const d = tplRow.content.firstElementChild.cloneNode(true); rowsWrap.appendChild(d); };
+      el('[data-paste]', r).onclick = async () => {};
+      rowsWrap.appendChild(r);
+    });
+    els('.calc', s)[0].click();
+  </script>
+</body>
+</html>
